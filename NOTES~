@@ -1,0 +1,81 @@
+
+
+1.  Setup database connection, modify:  $(proj)/.env 
+    set:
+	DB_CONNECTION=mysql
+	DB_HOST=
+	DB_PORT=
+	DB_DATABASE=
+	DB_PASSWORD=
+
+    Also edit:   $(proj)/config/database.php   change appropriate fields under 'mysql'
+
+
+2.  Define Routes:
+
+    Method	Route				Description
+    ------	-----				-----------
+    GET		/				Index
+
+    GET		/club				All clubs Summary page
+    GET		/club/create			Create a new specific club
+    POST	/club				Handle creation of new club
+    GET		/club/:id			Individual club summary page
+    GET		/club/:id/edit			Form to edit existing club
+    PUT		/club/:id		     	Handle updates to existing club
+
+
+    // Club specific pages...
+    
+    GET		/club/:club			Specific 'Club' Summary Dashboard
+    GET		/club/:club/team		Club Teams Summary
+    GET		/club/:club/staff		Club Staff Summary
+
+
+    GET		/club/:club/account		Club Accounts Summary
+    GET		/club/:club/account/create	Form to create a specific account
+    POST	/club/:club/account		Handle creation of new account
+    GET		/club/:club/account/:id		Individual account summary page
+    GET		/club/:club/account/:id/edit	Form to edit existing account
+    PUT		/club/:club/account/:id		Handle updates to existing account
+
+3.  Create new Controller class.  For 'club'...
+    a) edit routes/web.php, insert
+
+       	    use App\Http\Controllers\ClubController;
+            Route::resource('clubs', ClubController::class);
+    
+
+    b) make the ClubController class.
+
+
+       	    % artisan make:controller ClubController --resource --model=Club
+       	       
+	       afterward, we have a new file:   app/Http/Controllers/ClubController.php
+
+    c)  edit ClubController.php, and create methods for:
+        	-index(), create(), store(), show(), edit() update(), destroy()
+
+
+
+3.  Create new Club model class.  For 'club'...
+
+    a) edit app/Models/Club.php
+
+       <?php
+       namespace App\Models;
+       use Illuminate\Database\Eloquent\Factories\HasFactory;
+       use Illuminate\Database\Eloquent\Model;
+
+       class Product extends Model
+       {
+		use HasFactory;
+		protected $fillable = [
+			  'name', 'website', 'subdomain'
+		 ];
+       }
+
+       --eof--
+
+
+4) add blade files in resources/views/clubs/

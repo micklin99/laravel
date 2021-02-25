@@ -1,0 +1,19 @@
+
+
+composer create-project laravel/laravel example-app
+cd example-app
+php artisan serve
+
+
+Web site: up/down
+
+    % php artisan down
+    % php artisan down
+
+Migrations:
+
+    % php artisan make:migration create_users_table   # create new migration in $(proj)/database/migrations
+    % php artisan migrate:fresh                       # reset the database
+    % php artisan migrate:fresh --seed                # reset the database, and seed with data
+    % php artisan migrate:refresh                     # reset the database
+
