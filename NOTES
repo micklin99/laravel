@@ -1,5 +1,14 @@
 
 
+Clone a repo and start working:
+
+      % git clone https://path_to_repo
+      % composer install
+      
+
+
+
+
 1.  Setup database connection, modify:  $(proj)/.env 
     set:
 	DB_CONNECTION=mysql
