@@ -2,6 +2,8 @@
 
 use Illuminate\Support\Facades\Route;
 
+use App\Http\Controllers\ClubController;
+
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -20,5 +22,10 @@ Route::get('/', function () {
 Route::get('/dashboard', function () {
     return view('dashboard');
 })->middleware(['auth'])->name('dashboard');
+
+// Clubs
+Route::get('/club', [ClubController::class, 'index'])->name('club');
+
+
 
 require __DIR__.'/auth.php';

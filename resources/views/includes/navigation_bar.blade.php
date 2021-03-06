@@ -4,7 +4,9 @@
     <!-- Left navbar links -->
     <ul class="navbar-nav">
 	<li class="nav-item">
-	    <a class="nav-link" data-widget="pushmenu" href="#" role="button"><i class="fas fa-bars"></i></a>
+	    <a class="nav-link" data-widget="pushmenu" href="#" role="button">
+		<i class="fas fa-bars"></i>
+	    </a>
 	</li>
 
 	<li class="nav-item d-none d-sm-inline-block">
@@ -25,9 +27,16 @@
 	    </a>
 	</li>
 
-	<li class="nav-item">
-	    <a id="logout" class="dropdown-item dropdown-footer"  href="#">Logout</a>
-	</li>
+	<form method="POST" action="{{ route('logout') }}">
+            @csrf
+
+            <x-dropdown-link :href="route('logout')"
+                             onclick="event.preventDefault();
+                                                this.closest('form').submit();">
+                {{ __('Log out') }}
+            </x-dropdown-link>
+        </form>
+
 
     </ul>
 </nav>

@@ -1,15 +1,15 @@
-@extends('layouts.fortygoals')
+@extends('fortygoals')
 
  
 @section('content')
 
     <div class="row">
         <div class="col-lg-12 margin-tb">
-            <div class="pull-left">
-                <h2>fortygoals Dashboard</h2>
+            <div class="align-center">
+                <h4>Club Management</h4>
             </div>
             <div class="pull-right">
-                <a class="btn btn-success" href="{{ route('clubs.create') }}"> Create New Club</a>
+                <a class="btn btn-success" href="#"> Create New Club</a>
             </div>
         </div>
     </div>
@@ -37,10 +37,10 @@
 		<td>{{ $club->website }}</td>
 		<td>{{ $club->subdomain }}</td>
 		<td>
-                    <form action="{{ route('clubs.destroy',$club->id) }}" method="POST">
-			<a class="btn btn-info" href="{{ route('clubs.show',$club->id) }}">
+                    <form action="{{ route('club') }}" method="POST">
+			<a class="btn btn-info" href="#">
 			    Show</a>
-			<a class="btn btn-primary" href="{{ route('clubs.edit',$club->id) }}">
+			<a class="btn btn-primary" href="#">
 			    Edit</a>
 			@csrf
 			@method('DELETE')

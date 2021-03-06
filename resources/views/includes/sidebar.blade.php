@@ -20,7 +20,7 @@
 	    </div>
 	    <div class="info">
 		<a href="/" class="d-block">
-		    <?php echo "firstName" . " " . "lastName" ?>
+		   {{ Auth::user()->firstname }} {{ Auth::user()->lastname }} 
 		</a>
 	    </div>
 	</div>
