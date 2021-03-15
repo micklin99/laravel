@@ -6,9 +6,16 @@ use Illuminate\Console\Command;
 
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Hash;
 
 use App\Models\State;
 use App\Models\Country;
+use App\Models\Role;
+use App\Models\Permission;
+use App\Models\User;
+use App\Models\Person;
+use App\Models\Club;
+
 
 class initDB extends Command
 {
@@ -17,14 +24,15 @@ class initDB extends Command
      *
      * @var string
      */
-    protected $signature = 'db:init';
+    protected $signature = 'db:init {--erase}';
 
     /**
      * The console command description.
      *
      * @var string
      */
-    protected $description = 'loads a database with initial startup data';
+    protected $description =
+	"loads a database with initial startup data.  If '--erase' is specified, erase all tables before loading";
 
     /**
      * Create a new command instance.
@@ -36,95 +44,102 @@ class initDB extends Command
         parent::__construct();
     }
 
-    private function checkDatabaseTable( $table )
+    private function checkDatabaseTable( $table, $erase )
     {
-    
-       if (! Schema::hasTable( $table ))
-       {
-         $this->error("'" . $table . "' table does not exist.  Run 'php artisan migrate'.");
-	 return false;
-       }
+	
+	if (! Schema::hasTable( $table ))
+	{
+            $this->error("'" . $table . "' table does not exist.  Run 'php artisan migrate'.");
+	    return false;
+	}
 
-       $size = DB::table( $table )->count();
+	if ($erase)
+	{
+	    DB::statement('SET FOREIGN_KEY_CHECKS=0;');	    
+	    DB::table( $table )->truncate();
+	    DB::statement('SET FOREIGN_KEY_CHECKS=1;');	    	    
+	}
 
-       if ($size > 0)
-       {
-         $this->error("'" . $table . "' table has previously been loaded and contains " .
-	             $size . " rows.");
-         return false;
-       }
+	$size = DB::table( $table )->count();
 
-       return true;
+	if ($size > 0)
+	{
+            $this->error("'" . $table . "' table has previously been loaded and contains " .
+			 $size . " rows.");
+            return false;
+	}
+
+	return true;
     }
 
     private function loadStates()
     {
-       $states = array(
-              array( "abbrev"=>'AL', "name"=>'ALABAMA' ),
-	      array( "abbrev"=>'AK', "name"=>'ALASKA' ),
-	      array( "abbrev"=>'AZ', "name"=>'ARIZONA' ),
-       	      array( "abbrev"=>'AR', "name"=>'ARKANSAS' ),
-       	      array( "abbrev"=>'CA', "name"=>'CALIFORNIA' ),
-       	      array( "abbrev"=>'CO', "name"=>'COLORADO' ),
-       	      array( "abbrev"=>'CT', "name"=>'CONNECTICUT' ),
-       	      array( "abbrev"=>'DE', "name"=>'DELAWARE' ),
-       	      array( "abbrev"=>'DC', "name"=>'DISTRICT OF COLUMBIA' ),
-       	      array( "abbrev"=>'FL', "name"=>'FLORIDA' ),
-       	      array( "abbrev"=>'GA', "name"=>'GEORGIA' ),
-       	      array( "abbrev"=>'HI', "name"=>'HAWAII' ),
-       	      array( "abbrev"=>'ID', "name"=>'IDAHO' ),
-       	      array( "abbrev"=>'IL', "name"=>'ILLINOIS' ),
-       	      array( "abbrev"=>'IN', "name"=>'INDIANA' ),
-       	      array( "abbrev"=>'IA', "name"=>'IOWA' ),
-       	      array( "abbrev"=>'KS', "name"=>'KANSAS' ),
-       	      array( "abbrev"=>'KY', "name"=>'KENTUCKY' ),
-       	      array( "abbrev"=>'LA', "name"=>'LOUISIANA' ),
-       	      array( "abbrev"=>'ME', "name"=>'MAINE' ),
-       	      array( "abbrev"=>'MD', "name"=>'MARYLAND' ),
-       	      array( "abbrev"=>'MA', "name"=>'MASSACHUSETTS' ),
-       	      array( "abbrev"=>'MI', "name"=>'MICHIGAN' ),
-       	      array( "abbrev"=>'MN', "name"=>'MINNESOTA' ),
-       	      array( "abbrev"=>'MS', "name"=>'MISSISSIPPI' ),
-       	      array( "abbrev"=>'MO', "name"=>'MISSOURI' ),
-       	      array( "abbrev"=>'MT', "name"=>'MONTANA' ),
-       	      array( "abbrev"=>'NE', "name"=>'NEBRASKA' ),
-       	      array( "abbrev"=>'NV', "name"=>'NEVADA' ),
-       	      array( "abbrev"=>'NH', "name"=>'NEW HAMPSHIRE' ),
-       	      array( "abbrev"=>'NJ', "name"=>'NEW JERSEY' ),
-       	      array( "abbrev"=>'NM', "name"=>'NEW MEXICO' ),
-       	      array( "abbrev"=>'NY', "name"=>'NEW YORK' ),
-       	      array( "abbrev"=>'NC', "name"=>'NORTH CAROLINA' ),
-       	      array( "abbrev"=>'ND', "name"=>'NORTH DAKOTA' ),
-       	      array( "abbrev"=>'OH', "name"=>'OHIO' ),
-       	      array( "abbrev"=>'OK', "name"=>'OKLAHOMA' ),
-       	      array( "abbrev"=>'OR', "name"=>'OREGON' ),
-       	      array( "abbrev"=>'PA', "name"=>'PENNSYLVANIA' ),
-       	      array( "abbrev"=>'RI', "name"=>'RHODE ISLAND' ),
-       	      array( "abbrev"=>'SC', "name"=>'SOUTH CAROLINA' ),
-       	      array( "abbrev"=>'SD', "name"=>'SOUTH DAKOTA' ),
-       	      array( "abbrev"=>'TN', "name"=>'TENNESSEE' ),
-       	      array( "abbrev"=>'TX', "name"=>'TEXAS' ),
-       	      array( "abbrev"=>'UT', "name"=>'UTAH' ),
-       	      array( "abbrev"=>'VT', "name"=>'VERMONT' ),
-       	      array( "abbrev"=>'VA', "name"=>'VIRGINIA' ),
-       	      array( "abbrev"=>'WA', "name"=>'WASHINGTON' ),
-       	      array( "abbrev"=>'WV', "name"=>'WEST VIRGINIA' ),
-       	      array( "abbrev"=>'WI', "name"=>'WISCONSIN' ),
-       	      array( "abbrev"=>'WY', "name"=>'WYOMING' )
-       );
+	$states = array(
+            array( "abbrev"=>'AL', "name"=>'ALABAMA' ),
+	    array( "abbrev"=>'AK', "name"=>'ALASKA' ),
+	    array( "abbrev"=>'AZ', "name"=>'ARIZONA' ),
+       	    array( "abbrev"=>'AR', "name"=>'ARKANSAS' ),
+       	    array( "abbrev"=>'CA', "name"=>'CALIFORNIA' ),
+       	    array( "abbrev"=>'CO', "name"=>'COLORADO' ),
+       	    array( "abbrev"=>'CT', "name"=>'CONNECTICUT' ),
+       	    array( "abbrev"=>'DE', "name"=>'DELAWARE' ),
+       	    array( "abbrev"=>'DC', "name"=>'DISTRICT OF COLUMBIA' ),
+       	    array( "abbrev"=>'FL', "name"=>'FLORIDA' ),
+       	    array( "abbrev"=>'GA', "name"=>'GEORGIA' ),
+       	    array( "abbrev"=>'HI', "name"=>'HAWAII' ),
+       	    array( "abbrev"=>'ID', "name"=>'IDAHO' ),
+       	    array( "abbrev"=>'IL', "name"=>'ILLINOIS' ),
+       	    array( "abbrev"=>'IN', "name"=>'INDIANA' ),
+       	    array( "abbrev"=>'IA', "name"=>'IOWA' ),
+       	    array( "abbrev"=>'KS', "name"=>'KANSAS' ),
+       	    array( "abbrev"=>'KY', "name"=>'KENTUCKY' ),
+       	    array( "abbrev"=>'LA', "name"=>'LOUISIANA' ),
+       	    array( "abbrev"=>'ME', "name"=>'MAINE' ),
+       	    array( "abbrev"=>'MD', "name"=>'MARYLAND' ),
+       	    array( "abbrev"=>'MA', "name"=>'MASSACHUSETTS' ),
+       	    array( "abbrev"=>'MI', "name"=>'MICHIGAN' ),
+       	    array( "abbrev"=>'MN', "name"=>'MINNESOTA' ),
+       	    array( "abbrev"=>'MS', "name"=>'MISSISSIPPI' ),
+       	    array( "abbrev"=>'MO', "name"=>'MISSOURI' ),
+       	    array( "abbrev"=>'MT', "name"=>'MONTANA' ),
+       	    array( "abbrev"=>'NE', "name"=>'NEBRASKA' ),
+       	    array( "abbrev"=>'NV', "name"=>'NEVADA' ),
+       	    array( "abbrev"=>'NH', "name"=>'NEW HAMPSHIRE' ),
+       	    array( "abbrev"=>'NJ', "name"=>'NEW JERSEY' ),
+       	    array( "abbrev"=>'NM', "name"=>'NEW MEXICO' ),
+       	    array( "abbrev"=>'NY', "name"=>'NEW YORK' ),
+       	    array( "abbrev"=>'NC', "name"=>'NORTH CAROLINA' ),
+       	    array( "abbrev"=>'ND', "name"=>'NORTH DAKOTA' ),
+       	    array( "abbrev"=>'OH', "name"=>'OHIO' ),
+       	    array( "abbrev"=>'OK', "name"=>'OKLAHOMA' ),
+       	    array( "abbrev"=>'OR', "name"=>'OREGON' ),
+       	    array( "abbrev"=>'PA', "name"=>'PENNSYLVANIA' ),
+       	    array( "abbrev"=>'RI', "name"=>'RHODE ISLAND' ),
+       	    array( "abbrev"=>'SC', "name"=>'SOUTH CAROLINA' ),
+       	    array( "abbrev"=>'SD', "name"=>'SOUTH DAKOTA' ),
+       	    array( "abbrev"=>'TN', "name"=>'TENNESSEE' ),
+       	    array( "abbrev"=>'TX', "name"=>'TEXAS' ),
+       	    array( "abbrev"=>'UT', "name"=>'UTAH' ),
+       	    array( "abbrev"=>'VT', "name"=>'VERMONT' ),
+       	    array( "abbrev"=>'VA', "name"=>'VIRGINIA' ),
+       	    array( "abbrev"=>'WA', "name"=>'WASHINGTON' ),
+       	    array( "abbrev"=>'WV', "name"=>'WEST VIRGINIA' ),
+       	    array( "abbrev"=>'WI', "name"=>'WISCONSIN' ),
+       	    array( "abbrev"=>'WY', "name"=>'WYOMING' )
+	);
 
-       $numStates = count($states);
+	$numStates = count($states);
 
-       for ($i = 0; $i < $numStates; $i++)
-       {
-	  $state = new State();
-	  $state->id     = $i+1;
-          $state->abbrev = $states[$i]["abbrev"];
-          $state->name   = $states[$i]["name"];
-          $state->save();
-       }      
-       
-       $this->info("loaded " . $numStates . " rows into 'states' table.");
+	for ($i = 0; $i < $numStates; $i++)
+	{
+	    $state = new State();
+	    $state->id     = $i+1;
+            $state->abbrev = $states[$i]["abbrev"];
+            $state->name   = $states[$i]["name"];
+            $state->save();
+	}      
+	
+	$this->info("loaded " . $numStates . " rows into 'states' table.");
     }
 
 
@@ -421,21 +436,200 @@ class initDB extends Command
 	    array( "fips"=>'ZZ', "name"=>'ST. MARTIN AND ST. BARTHOLOMEW')
 	);
 
-       $numCountries = count($countries);
+	$numCountries = count($countries);
 
-       for ($i = 0; $i < $numCountries; $i++)
-       {
-	  $country = new Country();
-	  $country->id     = $i+1;
-          $country->fips   = $countries[$i]["fips"];
-          $country->name   = $countries[$i]["name"];
-          $country->save();
-       }      
-       
-       $this->info("loaded " . $numCountries . " rows into 'countries' table.");
+	for ($i = 0; $i < $numCountries; $i++)
+	{
+	    $country = new Country();
+	    $country->id     = $i+1;
+            $country->fips   = $countries[$i]["fips"];
+            $country->name   = $countries[$i]["name"];
+            $country->save();
+	}      
+	
+	$this->info("loaded " . $numCountries . " rows into 'countries' table.");
+    }
+
+    private function loadRoles()
+    {
+	$categories  = array( 'global', 'club-exec', 'club-ops', 'team', 'account', 'none' );
+	$permissions = array( 'all', 'read-only' );
+
+	$roles = array( 
+	    array( "title"=>'Global System Administrator',      "category"=>'global',          "perm"=>'all'   ),
+	    array( "title"=>'Club System Administrator',        "category"=>'club-exec',       "perm"=>'all'   ),
+	    array( "title"=>'Board Member',                     "category"=>'club-exec',       "perm"=>'all'   ),
+	    array( "title"=>'Chief Executive Officer',          "category"=>'club-exec',       "perm"=>'all'   ),
+	    array( "title"=>'Chief Financial Officer',          "category"=>'club-exec',       "perm"=>'all'   ),
+	    array( "title"=>'Chief Operating Officer',          "category"=>'club-exec',       "perm"=>'all'   ),
+	    array( "title"=>'President',                        "category"=>'club-exec',       "perm"=>'all'   ),
+	    array( "title"=>'Vice President',                   "category"=>'club-exec',       "perm"=>'all'   ),
+	    array( "title"=>'Executive Director', 	        "category"=>'club-exec',       "perm"=>'all'   ),
+	    array( "title"=>'Treasurer', 		        "category"=>'club-exec',       "perm"=>'all'   ),
+	    array( "title"=>'Secretary', 		        "category"=>'club-exec',       "perm"=>'read-only'  ),
+	    
+	    array( "title"=>'Director', 			"category"=>'club-ops',        "perm"=>'all'   ),
+	    array( "title"=>'Director of Operations', 	        "category"=>'club-ops',        "perm"=>'all'   ),
+	    array( "title"=>'Director of Football', 	        "category"=>'club-ops',        "perm"=>'all'  ),
+	    array( "title"=>'Director of Coaching', 	        "category"=>'club-ops',        "perm"=>'all'  ),
+	    array( "title"=>'Director of Player Development',   "category"=>'club-ops',        "perm"=>'all'  ),
+	    array( "title"=>'Director of Business Development', "category"=>'club-ops',        "perm"=>'read-only'  ),
+	    
+	    array( "title"=>'Head Coach',       		"category"=>'team',            "perm"=>'all'   ),
+	    array( "title"=>'Assistant Coach', 		        "category"=>'team',            "perm"=>'all'   ),
+	    array( "title"=>'Manager', 			        "category"=>'team',            "perm"=>'all'   ),
+	    array( "title"=>'Trainer', 			        "category"=>'team',            "perm"=>'read-only'  ),
+	    
+	    array( "title"=>'Parent', 			        "category"=>'account',         "perm"=>'all'   ),
+	    array( "title"=>'Guardian', 		        "category"=>'account',         "perm"=>'all'   ),
+	    array( "title"=>'Volunteer', 		        "category"=>'account',         "perm"=>'all'  ),
+	    array( "title"=>'Player', 			        "category"=>'account',         "perm"=>'read-only'  )
+	);
+
+	$numPermissions = count($permissions);
+	$numCategories  = count($categories);
+	$index 	        = 1;
+	
+	for ($i = 0; $i < $numCategories; $i++)
+	{
+	    for ($j = 0; $j < $numPermissions; $j++)
+	    {
+		$p             = new Permission();
+		$p->id         = $index;
+                $p->category   = $categories[$i];
+		$p->permission = $permissions[$j];
+		$p->save();
+		
+		$index++;
+	    }
+	}
+
+	$this->info("loaded " . $index . " rows into 'permissions' table.");	
+
+	$numRoles = count($roles);
+	for ($i = 0; $i < $numRoles; $i++)
+	{
+	    $role = new Role();
+	    $role->id      = $i+1;
+            $role->title   = $roles[$i]["title"];
+
+	    $cat  = $roles[$i]["category"];
+	    $perm = $roles[$i]["perm"];
+
+            $role->save();
+
+	    // get permission id
+	    $p1 = DB::table('permissions')->select('id')->
+ 	    where('category', $cat)->where('permission', $perm)->first();
+
+	    // insert new entry in role -> permission map table
+	    
+	    DB::table('permission_role')->insert([
+		'permission_id' => $p1->id,
+		'role_id'       => $role->id
+	    ]);
+
+	}      
+	
+	$this->info("loaded " . $numRoles . " rows into 'roles' table.");
     }
 
 
+    private function loadEmptyAddressContact()
+    {
+	// select 'MD' state
+	$state = DB::table('states')->select('id')->
+	where('abbrev', 'MD')->first();
+
+	// select 'US' country
+	$country = DB::table('countries')->select('id')->
+	where('fips', 'US')->first();
+
+	// insert empty address
+	$addressId = DB::table('addresses')->insertGetId([
+	    'address1'   => '',
+	    'address2'   => '',
+	    'city'       => '',
+	    'state_id'   => $state->id,
+	    'province'   => '',
+	    'country_id' => $country->id
+	]);
+
+	// insert empty contact
+	$contactId = DB::table('contacts')->insertGetId([
+	    'primaryEmail'   => '',
+	    'secondaryEmail' => '',
+	    'mobilePhone'    => '',
+	    'homePhone'      => '',
+	    'workPhone'      => '',
+	    'address_id'     => $addressId
+	]);
+    }
+
+    private function loadSystemAccount()
+    {
+	$match = false;
+	$password = "";
+	while (! $match )
+	{
+	    $password  = $this->secret('Enter the system password  : ');
+	    $password2 = $this->secret('Confirm the system password: ');
+
+	    if ($password == $password2)
+		$match = true;
+	    else
+	    {
+		$this->newLine();	    		
+		$this->info("** Passwords do not match.  Please retry...");
+		$this->newLine();	    
+	    }
+	}
+
+	// createa new Administrator user
+	$user = new User();
+	$user->email     = "admin@fortygoals.com";
+	$user->firstname = "Administrator";
+	$user->lastname  = "";
+	$user->password  = Hash::make($password);
+	$user->save();
+
+	// get default (empty) contact info
+	$contact = DB::table('contacts')->select('id')
+		     ->where('primaryEmail', "")->first();
+
+	// create a new default Administrator club
+	$club            = new Club();
+	$club->name      = "Default Club";
+	$club->website   = "www.fortygoals.com";
+	$club->subdomain = "";
+	$club->save();
+
+	// insert an entry into the 'persons' table...
+	$person = new Person();	
+	$person->firstname    = "Administrator";
+	$person->lastname     = "";
+	$person->accountOwner = true;
+	$person->user_id      = $user->id;
+	$person->club_id      = $club->id;
+	$person->contact_id   = $contact->id;
+	$person->save();
+
+	// and assign this account the appropriate role...
+	// 
+	$result = DB::table('roles')->select('id')
+		    ->where('title', 'Global System Administrator')->first();
+
+        DB::table('person_role')->insert([
+	    'person_id' => $person->id,
+	    'role_id'   => $result->id
+	]);
+
+	$this->info("created system account: " . $user->email );
+	
+        return 0;
+    }
+
+    
     /**
      * Execute the console command.
      *
@@ -443,17 +637,43 @@ class initDB extends Command
      */
     public function handle()
     {
-	// determine if table exists and is empty
+	$erase = $this->option('erase');
+	
+	// load US states
+	if ($this->checkDatabaseTable( 'states', $erase ))
+	    $this->loadStates();	    
 
-	$retval1 = $this->checkDatabaseTable( 'states' );
-	$retval2 = $this->checkDatabaseTable( 'countries' );
-
-	if ($retval1 && $retval2)
-	{
-	    $this->loadStates();
+	// load countries
+	if ($this->checkDatabaseTable( 'countries', $erase ))
 	    $this->loadCountries();
+
+	// load roles
+	if ($this->checkDatabaseTable( 'roles', $erase ) &&
+	    $this->checkDatabaseTable( 'permissions', $erase ) &&
+	    $this->checkDatabaseTable( 'permission_role', $erase ))
+	{			       
+	    $this->loadRoles();
 	}
-       
-       return ($retval1 && $retval2);
+
+	// create empty address and contact info row for accounts
+	//   that haven't been updated with this information....
+	//
+	if ($this->checkDatabaseTable( 'addresses', $erase ) &&
+	    $this->checkDatabaseTable( 'contacts', $erase ))
+	{			       
+	    $this->loadEmptyAddressContact();
+	}
+
+	// create global system account
+	//
+	if ($this->checkDatabaseTable( 'users', $erase ) &&
+	    $this->checkDatabaseTable( 'people', $erase ) &&
+	    $this->checkDatabaseTable( 'person_role', $erase ))
+	{			       
+	    $this->loadSystemAccount();
+	}	
+	
+	
+	return 0;
     }
 }

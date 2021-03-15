@@ -13,6 +13,9 @@
 	<!-- AdminLTE -->		
 	<link rel="stylesheet" type="text/css" href="{{ url('/css/adminlte.min.css') }}" />
 
+	<!-- Other stylesheets included by subpages -->
+	@stack('styles')
+
     </head>
 
     <body class="hold-transition sidebar-mini layout-fixed">
@@ -43,13 +46,16 @@
 	</div>
 
 	<!-- jQuery -->
-        <script src="{{ url('/js/jquery/jquery.min.js') }}" ></script>
+        <script src="{{ url('/plugins/jquery/jquery.min.js') }}" ></script>
 
 	<!-- Bootstrap 4 -->
-        <script src="{{ url('/js/bootstrap/bootstrap.bundle.min.js') }}" ></script>
+        <script src="{{ url('/plugins/bootstrap/js/bootstrap.bundle.min.js') }}" ></script>
 
 	<!-- AdminLTE -->		
         <script src="{{ url('/js/adminlte.js') }}" ></script>
+
+	<!-- Other Javascript included by subpages -->
+	@stack('scripts')
 	
     </body>
 </html>

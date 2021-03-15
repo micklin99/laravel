@@ -4,7 +4,33 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Facades\Hash;
+use DB;
+
+use App\Models\State;
+use App\Models\Country;
+use App\Models\Address;
+use App\Models\Contact;
+use App\Models\Role;
+use App\Models\Permission;
+use App\Models\User;
+use App\Models\Person;
 use App\Models\Club;
+
+
+use Illuminate\Support\Facades\Log;
+
+// @see config/app.php
+//
+//    where 'Datatables' is an alias for 'Yajra\DataTables\Facades\DataTables'.
+//
+//  Alternatively, use the following...
+//
+//     use Yajra\DataTables\Facades\DataTables;
+//
+use App\DataTables\ClubDataTable;
 
 class ClubController extends Controller
 {
@@ -13,41 +39,140 @@ class ClubController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index()
+    public function index( ClubDataTable $dataTable )
     {
-	$pagerAmount = 10;
-
-	$clubs = Club::latest()->paginate($pagerAmount);
-
-	return view('clubs.index', compact('clubs'))
-	       ->with('i', (request()->input('page', 1)-1) * $pagerAmount);
+	return $dataTable->render('clubs.index');
     }
 
     /**
-     * Show the form for creating a new resource.
+     * Display the form for creating a new resource.
      *
      * @return \Illuminate\Http\Response
      */
     public function create()
     {
-	return view('clubs.create');
+	return view('clubs.create', [
+	    'countries' => Country::all()->sortBy('name'),
+	    'states'    => State::all()->sortBy('name')
+	]);
+	
     }
 
     /**
-     * Store a newly created resource in storage.
+     * Store a newly created 'Club' in storage.
      *
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
     public function store(Request $request)
     {
-        $request->validate([
-	    'name'      => 'required',
-	    'website'   => 'required',
-	    'subdomain' => 'required',
-	]);
+	$rules = [
+	    'name'      => ['required', 'string'],  
+	    'website'   => ['required', 'string'],  
+	    'subdomain' => ['required', 'string'],  
+	    'firstName' => ['required', 'string'],  
+	    'lastName'  => ['required', 'string'],  
+	    'email'     => ['required', 'email'],
+	    'password'  => ['required',
+			    'string',
+			    'min:8',              // must length
+			    'confirmed',          // must have a 'password_confirmation' field
+			    'regex:/[a-z]/',      // must contain at least one lowercase letter
+			    'regex:/[A-Z]/',      // must contain at least one uppercase letter
+			    'regex:/[0-9]/',      // must contain at least one digit
+	    ],
+	    'address1'   => ['required', 'string' ],  
+	    'city'       => ['required', 'string' ],  
+	    'state'      => ['required', 'string'],               // state[0] => id, state[1] = state name
+	    'country'    => ['required', 'string'],  
+	    'postalCode' => ['required', 'string' ],  
+	    
+	];
+	
+	$messages = [
+	    'password.required' => 'The password must contain upper and lower case, a digit and be at least 8 characters long.',
+	    'password.min'      => 'The password must be at least 8 characers long.',
+	    'password.regex'    => 'The password must contain upper and lower case, a digit and be at least 8 characters long.',
+	    'postalCode.regex'  => 'The zip code is required.',
+	];
+	
+	$validator = Validator::make($request->all(), $rules, $messages);
+	
+	if ($validator->fails()) {
+	    return redirect()->Back()->withInput()->withErrors($validator);
+	}
+	
+	Log::info("ClubController::store() request: " . print_r($request->all(), true));
 
-	Club::create($request->all());
+	$club =	new Club($request->all());
+	$club->save();
+	Log::info("Club :" . $club);
+
+	// get the 'state' and country id
+	$stateInfo           = explode( "|", $request->state, 2);
+	$stateId             = $stateInfo[0];
+
+	$countryInfo         = explode( "|", $request->country, 2);
+	$countryId           = $countryInfo[0];
+	
+
+	// create a new Address
+	$address = new Address($request->all());
+	if ($request->address2 == null)
+	    $address->address2 = "";
+
+	$address->province   = "";
+	$address->state_id   = $stateId;
+	$address->country_id = $countryId;
+	$address->save();
+	Log::info("Address :" . $address);
+	
+	// create a new Contact
+	$contact = new Contact($request->all());
+	$contact->primaryEmail   = $request->email;
+	$contact->secondaryEmail = "";
+	$contact->mobilePhone    = "";
+	$contact->homePhone      = "";
+	$contact->workPhone      = "";
+	$contact->address_id     = $address->id;
+	$contact->save();	
+	Log::info("Contact :" . $contact);
+
+	// create a new User
+	$user            = new User($request->all());
+	$user->firstname = $request->firstName;
+	$user->lastname  = $request->lastName;
+	$user->password  = Hash::make( $request->password );
+	$user->save();
+	Log::info("Request Password :" . $request->password);	
+	Log::info("User :" . $user);
+	Log::info("Password :" . $user->password);
+
+	// create a new person
+	$person = new Person($request->all());
+	$person->firstName    = $request->firstName;
+	$person->middleName   = "";
+	$person->lastName     = $request->lastName;
+	$person->gender       = "";
+	$person->accountOwner = true;
+	$person->user_id      = $user->id;
+	$person->club_id      = $club->id;
+	$person->contact_id   = $contact->id;
+	$person->save();
+	Log::info("Person :" . $person);
+
+	// get the 'Club Administrator' role
+	$result = DB::table('roles')->select('id')
+		    ->where('title', 'Club System Administrator')->first();
+
+	Log::info("PersonID/RoleId :" . $person->id . " " . $result->id);	
+
+	// and assign this person the appropriate role...
+	// 
+        DB::table('person_role')->insert([
+	    'person_id' => $person->id,
+	    'role_id'   => $result->id
+	]);
 
 	return redirect()->route('clubs.index')
 			 ->with('success', "Club created successfully");
@@ -57,23 +182,31 @@ class ClubController extends Controller
     /**
      * Display the specified resource.
      *
-     * @param  \App\Models\Club  $club
+     * @param  id the club to display
      * @return \Illuminate\Http\Response
      */
-    public function show(Club $club)
+    public function view( $id )
     {
-	return view('clubs.show', compact('club'));
+	$club = Club::find($id);
+	
+	return view('clubs.view')->with('club', $club);
     }
 
     /**
-     * Show the form for editing the specified resource.
+     * Display the form for editing the specified resource.
      *
-     * @param  \App\Models\Club  $club
+     * @param  $id    the club id
+     *
      * @return \Illuminate\Http\Response
      */
-    public function edit(Club $club)
+    public function edit($id)
     {
-	return view('clubs.edit', compact('club'));
+	$club = Club::find($id);	
+
+	return view('clubs.edit', [
+	    'countries' => Country::all()->sortByBy('name'),
+	    'states'    => State::all()->sortBy('name')
+	])->with('club', $club);
     }
 
     /**
@@ -82,19 +215,50 @@ class ClubController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @param  \App\Models\Club  $club
      * @return \Illuminate\Http\Response
+     *
+     * @see edit.blade.php 
      */
-    public function update(Request $request, Club $club)
+    public function update(Request $request, $id)
     {
-	$request->validate([
-	    'name'      => 'required',
-	    'website'   => 'required',
-	    'subdomain' => 'required',
+	$data = $request->except('_method','_token','submit');
+
+	$validator = Validator::make($request->all(), [
+	    'name'      => 'required|string|min:2',
+	    'website'   => 'required|string|min:2',
+	    'subdomain' => 'required|string|min:2',
 	]);
 
-	$club->update($request->all());
+	if ($validator->fails()) {
+	    return redirect()->Back()->withInput()->withErrors($validator);
+	}
+	
+	$club = Club::find($id);
 
-	return redirect()->route('clubs.index')
-			 ->with('success','Club updated successfully');
+	if ($club->update($data))
+	{
+	    // get the Person, Contact, and Address info and
+	    //    update those records
+	    //
+	    //    TODO: write logic to update Person, Contact, Address
+	    //
+	    //    TODO: evenutally move this logic to their own controller
+	    //             methods, e.g. PersonController::update,
+	    //                           ContactController::update, etc.
+	    //
+
+	    
+	    Session::flash('message', 'Club Information updatede successfully.');
+	    Session::flash('alert-class', 'alert-success');
+	    return redirect()->route('clubs.index')
+			     ->with('success','Club updated successfully');	    
+	}
+	else
+	{
+	    Session::flash('message', 'Data not updated!');
+	    Session::flash('alert-class', 'alert-danger');
+	}
+
+	return Back()->withInput();
     }
 
     /**
@@ -103,11 +267,22 @@ class ClubController extends Controller
      * @param  \App\Models\Club  $club
      * @return \Illuminate\Http\Response
      */
-    public function destroy(Club $club)
+    public function delete($id)
     {
+	$club = Club::find($id);
+	
 	$club->delete();
 
 	return redirect()->route('clubs.index')
 			 ->with('success','Club deleted successfully');
     }
+
+    public function test()
+    {
+	return view('clubs.create');
+
+	return redirect()->route('clubs.index')
+			 ->with('success','Club deleted successfully');
+    }
+    
 }

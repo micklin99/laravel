@@ -19,13 +19,44 @@ Route::get('/', function () {
     return view('welcome');
 });
 
+// Test Dashboard
+Route::get('/test-dashboard', function () {
+    return view('test/test-dashboard');
+})->middleware(['auth'])->name('test-dashboard');
+
+///////////////////////////////////
+//                               //
+//        Forty Goals            //
+//                               //
+///////////////////////////////////
+
+//
+// Dashboard Page
+//
 Route::get('/dashboard', function () {
     return view('dashboard');
 })->middleware(['auth'])->name('dashboard');
 
-// Clubs
-Route::get('/club', [ClubController::class, 'index'])->name('club');
 
+//
+// Clubs
+//
+
+// ## Club View ##
+Route::get('/clubs', [ClubController::class, 'index'])->middleware(['auth'])->name('clubs.index');
+
+Route::get('/clubs/view/{id}', [ClubController::class, 'view'])->middleware(['auth'])->name('clubs.view');
+
+// ## Club Create
+Route::get('/clubs/create', [ClubController::class, 'create'])->middleware(['auth'])->name('clubs.create');
+Route::post('/clubs/store', [ClubController::class, 'store'])->middleware(['auth'])->name('clubs.store');
+
+// ## Club Update
+Route::get('/clubs/edit/{id}', [ClubController::class, 'edit'])->middleware(['auth'])->name('clubs.edit');
+Route::post('/clubs/update/{id}', [ClubController::class, 'update'])->middleware(['auth'])->name('clubs.update');
+
+// ## Club Delete
+Route::get('/clubs/delete/{id}', [ClubController::class, 'delete'])->middleware(['auth'])->name('clubs.delete');
 
 
 require __DIR__.'/auth.php';

@@ -4,7 +4,7 @@
 <aside class="main-sidebar sidebar-dark-primary elevation-4">
 
     <!-- Brand Logo -->
-    <a href="#" class="brand-link">
+    <a href="{{ route('dashboard') }}" class="brand-link">
 	<img src="{{ url('/images/fortygoals_icon.png') }}"
 		 alt="fortygoals logo" class="brand-image img-circle elevation-3" style="opacity: .8">
 	<span class="brand-text font-weight-light">forty goals</span>
@@ -27,9 +27,25 @@
 
 	<!-- Sidebar Menu -->
 	<nav class="mt-2">
-	    <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
+	    <ul class="nav nav-pills nav-sidebar flex-column"
+	    	data-widget="treeview" role="menu" data-accordion="false">
+		
 		<!-- Add icons to the links using the .nav-icon class
 		     with font-awesome or any other icon font library -->
+
+		@foreach (Session::get('roles') as $role)
+		    @if ($role == 'Global System Administrator')
+			    <li class="nav-item">
+			    <a href="{{ route('clubs.index') }}" class="nav-link">
+				<i class="nav-icon fas fa-copy"></i>
+				<p>
+				    Manage Clubs
+				</p>
+			    </a>
+			</li>
+		    @endif
+		@endforeach
+		
 		<li class="nav-item">
 		    <a href="/" class="nav-link">
 			<i class="nav-icon fas fa-copy"></i>
