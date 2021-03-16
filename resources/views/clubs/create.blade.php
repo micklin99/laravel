@@ -66,76 +66,10 @@
 			</div>
 		    </div>
 
-		    <div class="form-group mt-5">
-			<label for="inputEmail">Email</label>
-			<input type="email" name="email" class="form-control" id="inputEmail" value="{{ old('email') }}">
-		    </div>
+		    @include('includes.user')
 
-		    <div class="form-row mt-5">
-			<div class="form-group col-md-6">
-			    <label for="inputPassword">Password</label>
-			    <input type="password" name="password" class="form-control" id="inputPassword"
-				   value="{{ old('password') }}">
-			</div>
-			<div class="form-group col-md-6">
-			    <label for="inputPasswordConfirmation">Confirm Password</label>
-			    <input type="password" name="password_confirmation" class="form-control" id="inputPasswordConfirmation"
-				   value="{{ old('password_confirmation') }}">
-			</div>
-		    </div>
+		    @include('includes.address')
 		    
-		    <div class="form-group">
-			<label for="inputAddress">Address</label>
-			<input type="text" name="address1" class="form-control" id="inputAddress" value="{{ old('address1') }}">
-		    </div>
-		    <div class="form-group">
-			<label for="inputAddress2">Address 2</label>
-			<input type="text" name="address2" class="form-control" id="inputAddress2" value="{{ old('address2') }}">
-		    </div>
-		    <div class="form-row">
-			<div class="form-group col-md-4">
-			    <label for="inputCity">City</label>
-			    <input type="text" name="city" class="form-control"  id="inputCity" value="{{ old('city') }}">
-			</div>
-			<div class="form-group col-md-3">
-			    <label for="inputState">State</label>
-			    <select id="inputState" name="state" class="form-control">
-
-				@if (old('state') != "")
-				    <option value="{{ old('state') }}" selected> {{ Str::after(old('state'), '|') }} </option>
-				@else
-				    <option value=""></option>
-				@endif
-
-				@foreach ($states as $state)
-				    <option value="{{$state->id}}|{{$state->name}}">{{ $state->name }}</option>
-				@endforeach
-
-			    </select>
-			</div>
-			
-			<div class="form-group col-md-3">
-			    <label for="inputCountry">Country</label>
-			    <select id="inputCountry" name="country" class="form-control">
-
-				@if (old('country') != "")
-				    <option value="{{ old('country') }}" selected> {{ Str::after(old('country'), '|') }} </option>				    
-				@else
-				    <option value=""></option>
-				@endif
-				
-				@foreach ($countries as $country)
-				    <option value="{{$country->id}}|{{$country->name}}">{{ $country->name }}</option>				    
-				@endforeach
-			    </select>
-			</div>
-			
-			<div class="form-group col-md-2">
-			    <label for="inputZip">Zip</label>
-			    <input type="text" name="postalCode" class="form-control" id="inputZip" value="{{ old('postalCode') }}">
-			</div>
-		    </div>
-
 		    
 		    <div class="col-xs-12 col-sm-12 col-md-12 text-center">
 			<button type="submit" class="btn btn-primary">Create New Club</button>

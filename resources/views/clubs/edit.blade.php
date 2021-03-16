@@ -72,59 +72,9 @@
 			</div>
 		    </div>
 
-		    <div class="form-row mt-5">
-			<div class="form-group col-md-6">
-			    <label for="inputEmail">Email</label>
-			    <input type="email" name="email" class="form-control" id="inputEmail"
-				   placeholder=	"{{ $club->admin()->email }}">
-			</div>
-			<div class="form-group col-md-6">
-			    <label for="inputPassword4">Password</label>
-			    <input type="password" class="form-control" id="inputPassword4" placeholder="">
-			</div>
-		    </div>
-		    <div class="form-group">
-			<label for="inputAddress">Address</label>
-			<input type="text" name="address1" class="form-control" id="inputAddress" 
-			       placeholder="{{ $club->admin()->contact->address->address1 }}">
-		    </div>
-		    <div class="form-group">
-			<label for="inputAddress2">Address 2</label>
-			<input type="text" name="address2" class="form-control" id="inputAddress2"
-			       placeholder="{{ $club->admin()->contact->address->address2 }}">
-		    </div>
-		    <div class="form-row">
-			<div class="form-group col-md-4">
-			    <label for="inputCity">City</label>
-			    <input type="text" name="city" class="form-control"  id="inputCity"
-				   placeholder="{{ $club->admin()->contact->address->city }}">
-			</div>
-			<div class="form-group col-md-3">
-			    <label for="inputState">State</label>
-			    <select id="inputState" name="state" class="form-control">
-				<option selected> {{ $club->admin()->contact->address->state->name }} </option>
-				@foreach ($states as $state)
-				    <option value="{{ $state->id }}">{{ $state->name }}</option>
-				@endforeach
-			    </select>
-			</div>
-			
-			<div class="form-group col-md-3">
-			    <label for="inputCountry">Country</label>
-			    <select id="inputCountry" name="country" class="form-control">
-				<option selected> {{ $club->admin()->contact->address->country->name }} </option>
-				@foreach ($countries as $country)
-				    <option value="{{ $country->id }}">{{ $country->name }}</option>
-				@endforeach
-			    </select>
-			</div>
-			
-			<div class="form-group col-md-2">
-			    <label for="inputZip">Zip</label>
-			    <input type="text" class="form-control" id="inputZip">
-			</div>
-		    </div>
-		    
+		    @include('includes.user')		    
+
+		    @include('includes.address')
 		    
 		    <div class="col-xs-12 col-sm-12 col-md-12 text-center">
 			<button type="submit" class="btn btn-primary">Update Club Information</button>

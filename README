@@ -1,0 +1,29 @@
+
+
+
+1. Setup the database
+
+   php artisan migrate
+
+
+2. Initialize the database
+
+   php artisan db:init --erase
+
+
+3. Setup a default administrator account
+
+   php artisan create:user
+
+
+4. Start the server
+
+   php artisan serve
+
+
+5. Point your browser at one of:
+      http://127.0.0.1:8000/
+      http://localhost:8000/
+
+
+   

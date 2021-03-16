@@ -102,11 +102,10 @@ class ClubController extends Controller
 	    return redirect()->Back()->withInput()->withErrors($validator);
 	}
 	
-	Log::info("ClubController::store() request: " . print_r($request->all(), true));
+	//Log::info("ClubController::store() request: " . print_r($request->all(), true));
 
 	$club =	new Club($request->all());
 	$club->save();
-	Log::info("Club :" . $club);
 
 	// get the 'state' and country id
 	$stateInfo           = explode( "|", $request->state, 2);
@@ -114,34 +113,26 @@ class ClubController extends Controller
 
 	$countryInfo         = explode( "|", $request->country, 2);
 	$countryId           = $countryInfo[0];
-	
 
 	// create a new Address
 	$address = new Address($request->all());
-	if ($request->address2 == null)
-	    $address->address2 = "";
-
-	$address->province   = "";
 	$address->state_id   = $stateId;
 	$address->country_id = $countryId;
 	$address->save();
-	Log::info("Address :" . $address);
+	//Log::info("Address :" . $address);
 	
 	// create a new Contact
 	$contact = new Contact($request->all());
 	$contact->primaryEmail   = $request->email;
-	$contact->secondaryEmail = "";
-	$contact->mobilePhone    = "";
-	$contact->homePhone      = "";
-	$contact->workPhone      = "";
 	$contact->address_id     = $address->id;
 	$contact->save();	
-	Log::info("Contact :" . $contact);
+	//Log::info("Contact :" . $contact);
 
 	// create a new User
 	$user            = new User($request->all());
 	$user->firstname = $request->firstName;
 	$user->lastname  = $request->lastName;
+	$user->email     = $request->email;
 	$user->password  = Hash::make( $request->password );
 	$user->save();
 	Log::info("Request Password :" . $request->password);	
@@ -151,9 +142,7 @@ class ClubController extends Controller
 	// create a new person
 	$person = new Person($request->all());
 	$person->firstName    = $request->firstName;
-	$person->middleName   = "";
 	$person->lastName     = $request->lastName;
-	$person->gender       = "";
 	$person->accountOwner = true;
 	$person->user_id      = $user->id;
 	$person->club_id      = $club->id;
@@ -188,7 +177,6 @@ class ClubController extends Controller
     public function view( $id )
     {
 	$club = Club::find($id);
-	
 	return view('clubs.view')->with('club', $club);
     }
 
@@ -204,8 +192,10 @@ class ClubController extends Controller
 	$club = Club::find($id);	
 
 	return view('clubs.edit', [
-	    'countries' => Country::all()->sortByBy('name'),
-	    'states'    => State::all()->sortBy('name')
+	    'user'      => $club->admin()->user,
+	    'address'   => $club->admin()->contact->address,
+	    'countries' => Country::all()->sortBy('name'),
+	    'states'    => State::all()->sortBy('name'),
 	])->with('club', $club);
     }
 
@@ -262,27 +252,44 @@ class ClubController extends Controller
     }
 
     /**
-     * Remove the specified resource from storage.
+     * Enable the specified club
      *
      * @param  \App\Models\Club  $club
      * @return \Illuminate\Http\Response
      */
-    public function delete($id)
+    public function enable($id)
     {
 	$club = Club::find($id);
-	
-	$club->delete();
+	if (!club->active)
+	{
+	    $club->active = true;
+	    $club->save();
+	    return redirect()->route('clubs.index')
+			     ->with('success','Club enabled successfully');
+	}
 
-	return redirect()->route('clubs.index')
-			 ->with('success','Club deleted successfully');
+	return redirect()->route('clubs.index');
     }
 
-    public function test()
+
+    /**
+     * Disable the specified club
+     *
+     * @param  \App\Models\Club  $club
+     * @return \Illuminate\Http\Response
+     */
+    public function disable($id)
     {
-	return view('clubs.create');
-
-	return redirect()->route('clubs.index')
-			 ->with('success','Club deleted successfully');
+	$club = Club::find($id);
+	if ($club->active)
+	{
+	    $club->active = false;
+	    $club->save();	
+	    return redirect()->route('clubs.index')
+			     ->with('success','Club disabled successfully');
+	}
+	
+	return redirect()->route('clubs.index');	
     }
-    
+
 }

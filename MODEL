@@ -1,0 +1,32 @@
+
+
+2021-03-12
+
+Changes needed to Model
+
+
+
+1) 'users' table
+   change email             to username
+   change email_verified_at to user_verified_at
+
+   *eventually need to remove 'firstname' and 'lastname' (duplicated in 'people' table)
+
+2) [DONE] Add 'postalCode' to 'addresses' table
+
+3) [DONE] 'people' table
+   [DONE] add:    avatar       VARCHAR(255)   # filename of avatar graphic
+   [DONE] add:    displayName  VARCHAR(255)   # name displayed by user
+
+4) [DONE] add nullable (or default value) to all fields
+
+   [DONE] completed:
+	addresses
+	contacts
+	people
+	teams
+	seasons
+	schedule
+	leagues
+	eventtypes
+	eventaddresses
