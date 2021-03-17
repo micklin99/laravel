@@ -52,14 +52,18 @@ Route::get('/clubs/create', [ClubController::class, 'create'])->middleware(['aut
 Route::post('/clubs/store', [ClubController::class, 'store'])->middleware(['auth'])->name('clubs.store');
 
 // ## Club Update
-Route::get('/clubs/edit/{id}', [ClubController::class, 'edit'])->middleware(['auth'])->name('clubs.edit');
+Route::get('/clubs/edit/{id}',    [ClubController::class, 'edit'])->middleware(['auth'])->name('clubs.edit');
 Route::post('/clubs/update/{id}', [ClubController::class, 'update'])->middleware(['auth'])->name('clubs.update');
 
 // ## Club Enable
-Route::get('/clubs/enable/{id}', [ClubController::class, 'enable'])->middleware(['auth'])->name('clubs.enable');
+Route::get('/clubs/enable/{id}',  [ClubController::class, 'enable'])->middleware(['auth'])->name('clubs.enable');
 
 // ## Club Disable
 Route::get('/clubs/disable/{id}', [ClubController::class, 'disable'])->middleware(['auth'])->name('clubs.disable');
+
+// ## Club Delete
+Route::get('/clubs/delete/{id}',  [ClubController::class, 'delete'])->middleware(['auth'])->name('clubs.delete');
+
 
 
 require __DIR__.'/auth.php';

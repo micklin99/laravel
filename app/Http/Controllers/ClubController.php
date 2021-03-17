@@ -260,12 +260,10 @@ class ClubController extends Controller
     public function enable($id)
     {
 	$club = Club::find($id);
-	if (!club->active)
+	if (!$club->active)
 	{
 	    $club->active = true;
 	    $club->save();
-	    return redirect()->route('clubs.index')
-			     ->with('success','Club enabled successfully');
 	}
 
 	return redirect()->route('clubs.index');
@@ -285,11 +283,38 @@ class ClubController extends Controller
 	{
 	    $club->active = false;
 	    $club->save();	
-	    return redirect()->route('clubs.index')
-			     ->with('success','Club disabled successfully');
 	}
 	
 	return redirect()->route('clubs.index');	
     }
+
+    /**
+     * Delete the specified club
+     *
+     * @param  \App\Models\Club  $club
+     * @return \Illuminate\Http\Response
+     */
+    public function delete(Request $request, $id)
+    {
+	$club = Club::find($id);
+	if (!$club->active)
+	{
+	    /*
+	       $res= Club::where('id',$id)->delete();
+	       if ($res)
+	       {
+	       return redirect()->route('clubs.index')
+	       ->with('success','Club deleted successfully.');
+	       }
+	     */
+
+	    return redirect()->route('clubs.index')
+			     ->with('error','Problem deleting club "' . $club->name . "'.");
+	}
+
+	return redirect()->route('clubs.index')
+			 ->with('error','Club "' . $club->name . '" must be disabled before deleting.');
+    }
+
 
 }

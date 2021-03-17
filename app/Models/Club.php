@@ -22,10 +22,10 @@ class Club extends Model
 
     public function people()
     {
+        //	
+	// get all people associated with this club
+	//
 	$p = $this->hasMany('App\Models\Person');
-
-	$first = $p->first();
-	
 	return $p;
     }
 
@@ -47,8 +47,6 @@ class Club extends Model
 	    $q->where('role_id', $role_id);
 	}]);
 
-	Log::info("Role - Global Admin id: " . $role_id);
-
 	//
 	// we found a global system administrator, so return it...
 	//
@@ -56,7 +54,6 @@ class Club extends Model
 	{
 	    return $result->first();
 	}
-
 
 	//
 	// get the club administator role's id and search
@@ -80,6 +77,8 @@ class Club extends Model
 
 	//
 	//  ERROR! -- This is a problem and will likely cause an Exception 
+	//
+	//  TODO:  we need a way to handle this without an exception - likely a redirect to an error page.
 	//
 	Log::error("Database error: No global or club administrator assigned to club: " . $this->name);
 	return null;

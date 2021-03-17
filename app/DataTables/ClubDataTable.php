@@ -49,11 +49,20 @@ class ClubDataTable extends DataTable
 			       return $email;
 			   })
 			   ->addColumn('action', function($club) {
-			       $btn = '<div class="row">';
-			       $btn = $btn.'<a href=clubs/view/'    . $club->id . ' class="btn btn-primary btn-sm m-1 view-button" data-target="modal" data-target="#modal-disable"  data-target-id="' . $club->name . '">View</a>';
-			       $btn = $btn.'<a href=clubs/edit/'    . $club->id . ' class="btn btn-primary btn-sm m-1">Edit</a>';
-			       $btn = $btn.'<a href=clubs/enable/'  . $club->id . ' class="btn btn-primary  btn-sm m-1 enable-button"  id="' . $club->id . '">Enable</a>';
-			       $btn = $btn.'<a href=clubs/disable/' . $club->id . ' class="btn btn-danger  btn-sm m-1 disable-button" id="' . $club->id . '">Disable</a>';
+			       $btn =       '<div class="container">';
+			       $btn =         '<div class="row">';
+			       $btn = $btn.     '<div class="btn-group">';
+			       $btn = $btn.        '<a href=clubs/view/'    . $club->id . ' class="btn btn-primary btn-sm m-1">View</a>';
+			       $btn = $btn.        '<a href=clubs/edit/'    . $club->id . ' class="btn btn-primary btn-sm m-1">Edit</a>';
+			       
+			       if (!$club->active)
+			       	   $btn = $btn.    '<a href=clubs/enable/'  . $club->id . ' class="btn btn-warning btn-sm m-1">Start</a>';
+			       else
+				   $btn = $btn.    '<a href=clubs/disable/' . $club->id . ' class="btn btn-info    btn-sm m-1">Stop</a>';
+			       
+			       $btn = $btn.        '<a class="btn btn-danger  btn-sm m-1 delete-button" name="' . $club->name . '" id="' . $club->id . '">Delete</a>';			       
+			       $btn = $btn.     '</div>';
+			       $btn = $btn.  '</div>';
 			       $btn = $btn.'</div>';
 			       return $btn;
 			   });
