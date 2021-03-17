@@ -20,6 +20,7 @@ class CreateClubsTable extends Migration
 	    $table->string('subdomain');                // the subdomain string 'xxx' for 'http://xxx.fortygoals.com'
 	    $table->boolean('active')->default(true);   // the state of the club
             $table->timestamps();
+	    $table->softDeletes();                      // support soft deletes for 'Clubs'
         });
     }
 

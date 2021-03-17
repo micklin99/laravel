@@ -7,6 +7,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
+
+
 use DB;
 
 use App\Models\State;
@@ -289,32 +292,79 @@ class ClubController extends Controller
     }
 
     /**
-     * Delete the specified club
+     * Soft Delete (recoverable) the specified club
      *
      * @param  \App\Models\Club  $club
      * @return \Illuminate\Http\Response
      */
     public function delete(Request $request, $id)
     {
-	$club = Club::find($id);
-	if (!$club->active)
+	try
 	{
-	    /*
-	       $res= Club::where('id',$id)->delete();
-	       if ($res)
-	       {
-	       return redirect()->route('clubs.index')
-	       ->with('success','Club deleted successfully.');
-	       }
-	     */
+	    $club = Club::findorFail($id);
+	    $name = $club->name;
+	    if (!$club->active)
+	    {
+		$res= Club::where('id',$id)->delete();
+		if ($res)
+		{
+		    return redirect()->route('clubs.index')
+				     ->with('success','Club deleted successfully: ' . $name);
+		}
 
-	    return redirect()->route('clubs.index')
-			     ->with('error','Problem deleting club "' . $club->name . "'.");
+		return redirect()->route('clubs.index')
+				 ->with('error','Problem deleting club "' . $name . "'.");
+	    }
+	    else
+	    {
+		return redirect()->route('clubs.index')
+				 ->with('error','Club "' . $name . '" must be disabled before deleting.');
+
+	    }
 	}
-
-	return redirect()->route('clubs.index')
-			 ->with('error','Club "' . $club->name . '" must be disabled before deleting.');
+	catch( ModelNotFoundException $ex )
+	{
+	    return redirect()->route('clubs.index')
+			     ->with('error','Club with id "' . $id . '" could not be found in database.');
+	}
     }
 
 
+    /**
+     * Hard Delete (non-recoverable) the specified club
+     *
+     * @param  \App\Models\Club  $club
+     * @return \Illuminate\Http\Response
+     */
+    public function harddelete(Request $request, $id)
+    {
+	try
+	{
+	    $club = Club::findorFail($id);
+	    $name = $club->name;
+	    if (!$club->active)
+	    {
+		$result = Club::destroy($id);
+		if ($result)
+		{
+		    return redirect()->route('clubs.index')
+				     ->with('success','Club deleted successfully: ' . $name);
+		}
+
+		return redirect()->route('clubs.index')
+				 ->with('error','Problem deleting club: "' . $name . "'.");
+	    }
+	    else
+	    {
+		return redirect()->route('clubs.index')
+				 ->with('error','Club "' . $club->name . '" must be disabled before deleting.');
+
+	    }
+	}
+	catch( ModelNotFoundException $ex )
+	{
+	    return redirect()->route('clubs.index')
+			     ->with('error','Club with id "' . $id . '" could not be found in database.');
+	}
+    }
 }

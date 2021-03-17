@@ -2,8 +2,10 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\SoftDeletes;
+
 
 use App\Models\Person;
 use App\Models\Contact;
@@ -14,6 +16,7 @@ use Illuminate\Support\Facades\Log;
 class Club extends Model
 {
     use HasFactory;
+    use SoftDeletes;
 
     protected $table = "clubs";
 
@@ -65,7 +68,7 @@ class Club extends Model
 	    $q->where('role_id', $role_id);
 	}]);
 
-	Log::info("Role - Club Admin id: " . $role_id);	
+	// Log::info("Role - Club Admin id: " . $role_id);	
 	
 	//
 	// we found a club system administrator, so return it...

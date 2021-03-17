@@ -61,8 +61,11 @@ Route::get('/clubs/enable/{id}',  [ClubController::class, 'enable'])->middleware
 // ## Club Disable
 Route::get('/clubs/disable/{id}', [ClubController::class, 'disable'])->middleware(['auth'])->name('clubs.disable');
 
-// ## Club Delete
+// ## Club Soft Delete
 Route::get('/clubs/delete/{id}',  [ClubController::class, 'delete'])->middleware(['auth'])->name('clubs.delete');
+
+// ## Club Hard Delete
+Route::get('/clubs/harddelete/{id}',  [ClubController::class, 'harddelete'])->middleware(['auth'])->name('clubs.harddelete');
 
 
 
