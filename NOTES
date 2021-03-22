@@ -94,7 +94,10 @@ Clone a repo and start working:
 https://dev.to/kingsconsult/customize-laravel-auth-laravel-breeze-registration-and-login-1769
 
 
+5) Install DataTables
 
+   composer require yajra/laravel-datatables:^1.5
+   php artisan vendor:publish --tag=datatables
 
-
+   see: https://yajrabox.com/docs/laravel-datatables/master/installation#installing-laravel-datatables
 
